@@ -1,0 +1,157 @@
+/* ==========================================================================
+   TEMAS (html[data-theme]) E DISPOSIÇÃO "ÓRGÃO REAL" DO CONSOLE
+   O tema "escuro" é o visual original (styles.css); os outros só redefinem cores.
+   ========================================================================== */
+
+/* ---- Madeira de órgão: nogueira envernizada, latão e teclas de marfim ---- */
+html[data-theme="madeira"] {
+  --bg-studio: #2a1810;
+  --bg-panel: #3a2314;
+  --bg-panel-elevated: #4b2e1b;
+  --wood-dark: #2b180d;
+  --wood-mid: #6a4024;
+  --wood-light: #9c6638;
+  --brass: #c9922a;
+  --brass-light: #f1c566;
+  --brass-dim: rgba(201, 146, 42, 0.3);
+  --text-primary: #f8edd8;
+  --text-secondary: #dcc59f;
+  --text-muted: #b9a17c;
+  --border-subtle: rgba(255, 230, 190, 0.15);
+  --border-brass: rgba(241, 197, 102, 0.5);
+  --score-bg: #20130b;
+  --t-body: repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.1) 0 2px, transparent 2px 11px, rgba(255, 215, 160, 0.04) 11px 12px),
+    radial-gradient(circle at 50% 0%, #4a2c19 0%, #2a1810 70%);
+  --t-header: linear-gradient(180deg, #7a4a29 0%, #4d2d18 100%);
+  --t-panel: linear-gradient(180deg, #46291a 0%, #35200f 100%);
+  --t-card: rgba(20, 10, 4, 0.34);
+  --t-console: linear-gradient(180deg, #8a5430 0%, #5e381d 18%, #3d2411 100%);
+  --t-rail: linear-gradient(180deg, #2c180b 0%, #44280f 100%);
+  --t-deck: #2a170b;
+  --t-bed: #120a05;
+  --t-bedborder: #7a4a29;
+  --key-white-bg: linear-gradient(180deg, #fffaf0 0%, #f1e6cb 88%, #d8c7a1 100%);
+  --key-white-edge: #b9a67d;
+  --pedal-bg: linear-gradient(180deg, #b8814a 0%, #d6a063 35%, #a56f3b 100%);
+  --pedal-edge: #6a4020;
+}
+
+/* ---- Catedral: vinho profundo, ouro e marfim ---- */
+html[data-theme="catedral"] {
+  --bg-studio: #1c0810;
+  --bg-panel: #2b0f1b;
+  --bg-panel-elevated: #3a1626;
+  --wood-dark: #1f0a12;
+  --wood-mid: #4a1a2b;
+  --wood-light: #7a2f48;
+  --brass: #d4a537;
+  --brass-light: #f3d27a;
+  --brass-dim: rgba(212, 165, 55, 0.28);
+  --text-primary: #fbf1e4;
+  --text-secondary: #d9bfc6;
+  --text-muted: #a98c96;
+  --border-subtle: rgba(255, 220, 200, 0.13);
+  --border-brass: rgba(243, 210, 122, 0.5);
+  --score-bg: #170710;
+  --t-body: radial-gradient(circle at 50% 0%, #3d1226 0%, #1c0810 68%);
+  --t-header: linear-gradient(180deg, #5a1d33 0%, #2b0f1b 100%);
+  --t-panel: linear-gradient(180deg, #34121f 0%, #260b16 100%);
+  --t-card: rgba(10, 2, 6, 0.36);
+  --t-console: linear-gradient(180deg, #6b2540 0%, #43172a 18%, #26091a 100%);
+  --t-rail: linear-gradient(180deg, #1b0710 0%, #34121f 100%);
+  --t-deck: #200a14;
+  --t-bed: #0d0308;
+  --t-bedborder: #7a2f48;
+  --key-white-bg: linear-gradient(180deg, #fffdf8 0%, #f0e9dc 88%, #d9cdb8 100%);
+  --key-white-edge: #b3a58f;
+  --pedal-bg: linear-gradient(180deg, #8a3a52 0%, #a94d68 35%, #7d3248 100%);
+  --pedal-edge: #4a1626;
+}
+
+/* ---- Regras compartilhadas pelos temas coloridos ---- */
+html[data-theme="madeira"] body,
+html[data-theme="catedral"] body { background: var(--t-body); }
+
+html[data-theme="madeira"] .studio-header,
+html[data-theme="catedral"] .studio-header { background: var(--t-header); }
+
+html[data-theme="madeira"] :is(.tutor-panel, .metronome-panel, .score-section, .modal-card),
+html[data-theme="catedral"] :is(.tutor-panel, .metronome-panel, .score-section, .modal-card) { background: var(--t-panel); }
+
+html[data-theme="madeira"] :is(.metro-card, .tutor-card, .score-toolbar, .score-legend-bar),
+html[data-theme="catedral"] :is(.metro-card, .tutor-card, .score-toolbar, .score-legend-bar) { background: var(--t-card); }
+
+html[data-theme="madeira"] .score-scroll-container,
+html[data-theme="catedral"] .score-scroll-container { background: var(--score-bg); }
+
+html[data-theme="madeira"] #scoreSvg .note-head[fill="#14171f"],
+html[data-theme="catedral"] #scoreSvg .note-head[fill="#14171f"] { fill: var(--score-bg); }
+
+html[data-theme="madeira"] .organ-console,
+html[data-theme="catedral"] .organ-console { background: var(--t-console); }
+
+html[data-theme="madeira"] .stops-rail,
+html[data-theme="catedral"] .stops-rail { background: var(--t-rail); }
+
+html[data-theme="madeira"] :is(.manuals-stack, .floor-console, .expression-section),
+html[data-theme="catedral"] :is(.manuals-stack, .floor-console, .expression-section) { background: var(--t-deck); }
+
+html[data-theme="madeira"] :is(.keyboard-bed, .pedalboard-frame),
+html[data-theme="catedral"] :is(.keyboard-bed, .pedalboard-frame) { background: var(--t-bed); border-color: var(--t-bedborder); }
+
+html[data-theme="madeira"] :is(.studio-select, .btn:not(.btn-primary), .round-btn),
+html[data-theme="catedral"] :is(.studio-select, .btn:not(.btn-primary), .round-btn) {
+  background-color: var(--bg-panel-elevated);
+  color: var(--text-primary);
+}
+
+html[data-theme="madeira"] .key-white:not(.active):not(.tutor-target),
+html[data-theme="catedral"] .key-white:not(.active):not(.tutor-target) {
+  background: var(--key-white-bg);
+  border-right-color: var(--key-white-edge);
+  border-bottom-color: var(--key-white-edge);
+}
+
+html[data-theme="madeira"] .pedal-natural:not(.active):not(.tutor-target),
+html[data-theme="catedral"] .pedal-natural:not(.active):not(.tutor-target) {
+  background: var(--pedal-bg);
+  border-color: var(--pedal-edge);
+  border-bottom-color: var(--pedal-edge);
+}
+
+/* ---- Menu de ajustes (todos os temas) ---- */
+.prefs-group { position: relative; }
+.prefs-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 60;
+  width: min(92vw, 430px);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg-panel-elevated);
+  border: 1px solid var(--border-brass);
+  border-radius: var(--radius-md);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6);
+}
+.prefs-panel[hidden] { display: none; }
+.prefs-panel .field-row { display: grid; grid-template-columns: 88px 1fr; align-items: center; gap: 8px; }
+.prefs-panel .studio-select { width: 100%; white-space: normal; }
+
+/* ---- Console "órgão real": manuais na mesma escala (nota sobre nota), superior recuado ---- */
+.console-real .manuals-stack { gap: 0; }
+.console-real .manual-rh .keyboard-bed { height: 96px; filter: brightness(0.9); }
+.console-real .manual-rh .keyboard-scroll { padding-bottom: 0; }
+.console-real .manual-lh {
+  position: relative;
+  z-index: 1;
+  margin-top: -2px;
+  padding-top: 8px;
+  box-shadow: 0 -10px 14px -8px rgba(0, 0, 0, 0.75);
+  border-top: 2px solid rgba(251, 191, 36, 0.16);
+}
+.console-real .keyboard-bed { height: 108px; }
+.console-real .pedalboard-inner { min-width: 0; width: auto; }
+.console-real .pedal-naturals-row { width: 100%; gap: 3px; }

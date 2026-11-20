@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self' data:; worker-src 'self' blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+  <meta name="description" content="Organum Studio: simulador de órgão de tubos e tutor interativo no navegador, com partitura em 3 pentagramas, pedaleira, caixa expressiva, MIDI e metrônomo profissional." />
+  <meta name="theme-color" content="#0b0d11" />
+  <meta property="og:title" content="Organum Studio — Simulador e Tutor Interativo de Órgão" />
+  <meta property="og:description" content="Órgão de tubos virtual com partitura interativa, Modo Ensino, MIDI e metrônomo profissional." />
+  <meta property="og:type" content="website" />
+  <title>Organum Studio — Simulador e Tutor Interativo de Órgão</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="css/music-font.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/themes.css" />
+</head>
+<body>
+  <a class="skip-link" href="#scoreSection">Ir para a partitura</a>
+
+  <noscript>
+    <p class="noscript-msg">O Organum Studio precisa de JavaScript habilitado para funcionar.</p>
+  </noscript>
+
+  <!-- ========================================================================
+       CABEÇALHO: OBRA, TRANSPORTE, ENSINO, ARQUIVO E MIDI
+       ======================================================================== -->
+  <header class="studio-header">
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 20V8m4 12V4m4 16V6m4 14V4m4 16V8" stroke-linecap="round" />
+          <path d="M2 20h20M2 14h20" stroke-linecap="round" />
+        </svg>
+      </div>
+      <div class="brand-title">
+        <h1>Organum Studio</h1>
+        <p>Simulador &amp; Tutor Interativo de Órgão de Tubos</p>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <div class="control-group">
+        <label for="presetSelect" class="label-brass">Obra:</label>
+        <select id="presetSelect" class="studio-select" title="Selecionar obra ou exercício">
+          <option value="toccata">1. Tocata em Ré Menor (Intro, arr. simplificado) — J.S. Bach</option>
+          <option value="jesu">2. Coral: Jesus Alegria dos Homens (arr. simplificado) — Bach</option>
+          <option value="exercise">3. Exercício Guiado: Mãos + Pedaleira + Expressão</option>
+          <option value="empty">4. Partitura Vazia (Compor do Zero)</option>
+          <option value="custom" hidden disabled>— Composição atual (editada) —</option>
+        </select>
+      </div>
+
+      <div class="control-group prefs-group">
+        <button id="btnPrefs" class="btn" type="button" aria-expanded="false" aria-controls="prefsPanel" title="Tema, disposição do console e teclas do computador">⚙ Ajustes</button>
+        <div id="prefsPanel" class="prefs-panel" hidden>
+          <div class="field-row">
+            <label for="themeSelect">Tema</label>
+            <select id="themeSelect" class="studio-select">
+              <option value="escuro">Escuro (padrão)</option>
+              <option value="madeira">Madeira de órgão (nogueira e latão)</option>
+              <option value="catedral">Catedral (vinho e ouro)</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <label for="layoutSelect">Console</label>
+            <select id="layoutSelect" class="studio-select">
+              <option value="compacto">Compacto (como estava)</option>
+              <option value="real">Órgão real: manuais alinhados por nota, superior recuado e pedaleira centralizada</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <label for="pcKeysSelect">Teclas do PC</label>
+            <select id="pcKeysSelect" class="studio-select"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-group" role="group" aria-label="Transporte">
+        <button id="btnPlay" class="btn btn-primary" type="button" title="Tocar (Espaço)">▶ Tocar</button>
+        <button id="btnPause" class="btn" type="button" title="Pausar">⏸ Pausar</button>
+        <button id="btnStop" class="btn" type="button" title="Parar e voltar ao início">⏹ Parar</button>
+        <button id="btnLoop" class="btn btn-icon" type="button" aria-pressed="false" title="Repetir a obra em loop">🔁</button>
+        <div class="bpm-control">
+          <label for="bpmSlider">BPM:</label>
+          <input id="bpmSlider" type="range" min="20" max="300" value="72" />
+          <strong id="bpmValue">72</strong>
+        </div>
+      </div>
+
+      <div class="control-group" role="group" aria-label="Modo Ensino">
+        <button id="btnTutor" class="btn btn-tutor" type="button" aria-pressed="false" title="Ativar prática guiada passo a passo">🎓 Modo Ensino</button>
+        <button id="btnTutorSkip" class="btn" type="button" hidden title="Avançar para o próximo acorde/tempo">⏭ Pular Passo</button>
+      </div>
+
+      <div class="control-group">
+        <button id="btnMetroPanel" class="btn" type="button" aria-expanded="true" aria-controls="metronomePanel" title="Mostrar/ocultar o metrônomo">⏱ Metrônomo</button>
+        <button id="btnFileModal" class="btn" type="button" title="Salvar, abrir e exportar (JSON / MIDI)">⇅ Arquivo</button>
+        <button id="midiBadge" class="midi-badge" type="button" title="Clique para conectar um teclado/pedaleira MIDI USB">
+          <span class="midi-dot" aria-hidden="true"></span>
+          <span id="midiText">MIDI: conectar</span>
+        </button>
+        <select id="midiRouting" class="studio-select stops-select" hidden title="Para onde enviar as notas MIDI recebidas" aria-label="Roteamento MIDI"></select>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-workspace">
+
+    <!-- ======================================================================
+         METRÔNOMO PROFISSIONAL
+         ====================================================================== -->
+    <section id="metronomePanel" class="metronome-panel" aria-label="Metrônomo">
+      <div class="metro-head">
+        <div class="metro-title">
+          <span aria-hidden="true">⏱</span>
+          <span>Metrônomo profissional</span>
+        </div>
+        <div id="metroStatus" class="metro-status" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="metro-grid">
+        <!-- Andamento -->
+        <div class="metro-card">
+          <div class="metro-card-title">Andamento</div>
+          <div class="metro-bpm">
+            <button id="metroBpmDown" class="round-btn" type="button" aria-label="Diminuir andamento (Shift: 5)">−</button>
+            <div class="metro-bpm-readout">
+              <input id="metroBpmValue" class="metro-bpm-value" type="number" min="20" max="300" step="1" value="72" inputmode="numeric" aria-label="Andamento em BPM (digite para ajustar)" />
+              <span id="metroTerm" class="metro-term">Adagio</span>
+            </div>
+            <button id="metroBpmUp" class="round-btn" type="button" aria-label="Aumentar andamento (Shift: 5)">+</button>
+          </div>
+          <input id="metroBpmSlider" class="metro-slider" type="range" min="20" max="300" value="72" aria-label="Andamento em BPM" />
+          <div class="metro-actions">
+            <button id="metroToggle" class="btn btn-primary btn-lg" type="button" title="Iniciar/parar o metrônomo (Shift+Espaço)">▶ Iniciar</button>
+            <button id="metroTap" class="btn btn-lg" type="button" title="Toque no ritmo desejado para definir o andamento">👆 Tap</button>
+          </div>
+        </div>
+
+        <!-- Compasso, acentos e subdivisão -->
+        <div class="metro-card">
+          <div class="metro-card-title">Compasso &amp; acentos</div>
+          <div class="field-row">
+            <label for="metroBeats">Tempos/compasso</label>
+            <select id="metroBeats" class="studio-select"></select>
+          </div>
+          <div class="field-row">
+            <label for="metroSubdivision">Subdivisão</label>
+            <select id="metroSubdivision" class="studio-select"></select>
+          </div>
+          <div id="metroDots" class="metro-dots" role="group" aria-label="Acentos por tempo"></div>
+          <div class="metro-hint">Clique em cada tempo para alternar: <strong>acento</strong> → normal → suave → mudo.</div>
+        </div>
+
+        <!-- Som, contagem e treinador -->
+        <div class="metro-card">
+          <div class="metro-card-title">Som &amp; prática</div>
+          <div class="field-row">
+            <label for="metroSound">Timbre</label>
+            <select id="metroSound" class="studio-select"></select>
+          </div>
+          <div class="field-row">
+            <label for="metroVolume">Volume</label>
+            <input id="metroVolume" class="metro-slider" type="range" min="0" max="100" value="70" />
+          </div>
+          <div class="field-row">
+            <label for="metroCountIn">Contagem</label>
+            <select id="metroCountIn" class="studio-select">
+              <option value="0">Sem contagem</option>
+              <option value="1">1 compasso</option>
+              <option value="2">2 compassos</option>
+            </select>
+          </div>
+          <label class="check-row"><input id="metroWithScore" type="checkbox" /> Clique junto com a partitura</label>
+          <label class="check-row"><input id="metroTrainer" type="checkbox" /> Treinador de andamento</label>
+          <div class="field-row">
+            <span class="field-label">Aumentar</span>
+            <input id="trainerStep" class="num-input" type="number" min="1" max="50" value="4" aria-label="BPM a aumentar" disabled />
+            <span>BPM a cada</span>
+            <input id="trainerEvery" class="num-input" type="number" min="1" max="32" value="4" aria-label="Compassos entre aumentos" disabled />
+            <span>comp.</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Até</span>
+            <input id="trainerMax" class="num-input" type="number" min="20" max="300" value="160" aria-label="BPM máximo" disabled />
+            <span>BPM</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         PAINEL DO MODO ENSINO
+         ====================================================================== -->
+    <section id="tutorPanel" class="tutor-panel" aria-live="polite" aria-label="Tutor interativo">
+      <div class="tutor-header">
+        <div class="tutor-title tutor-title-wrap">
+          <span>🎓 TUTOR INTERATIVO — PRÁTICA GUIADA PASSO A PASSO</span>
+          <span id="tutorStepBadge" class="tutor-step-badge">Passo 1 / 1</span>
+        </div>
+        <div class="tutor-progress-wrap">
+          <span class="tutor-progress-label">Progresso:</span>
+          <div class="tutor-progress-bar"><div id="tutorProgressFill" class="tutor-progress-fill"></div></div>
+          <span id="tutorPctLabel" class="tutor-pct">0%</span>
+          <button id="btnTutorRestart" class="btn btn-icon" type="button" title="Recomeçar a lição">↺</button>
+        </div>
+      </div>
+
+      <div class="tutor-cards">
+        <div class="tutor-card rh">
+          <div class="tutor-card-label">Mão Direita — Teclado Superior (Azul)</div>
+          <div id="tutorRhList" class="tutor-card-value">Nenhuma nota</div>
+        </div>
+        <div class="tutor-card lh">
+          <div class="tutor-card-label">Mão Esquerda — Teclado Inferior (Verde)</div>
+          <div id="tutorLhList" class="tutor-card-value">Nenhuma nota</div>
+        </div>
+        <div class="tutor-card ped">
+          <div class="tutor-card-label">Pés — Pedaleira &amp; Articulação (Laranja)</div>
+          <div id="tutorPedList" class="tutor-card-value">Nenhum pedal</div>
+        </div>
+        <div class="tutor-card exp">
+          <div class="tutor-card-label">Pedal de Expressão (Caixa Expressiva)</div>
+          <div id="tutorExpList" class="tutor-card-value">mf (65%)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         PARTITURA: 3 PENTAGRAMAS + FAIXA DE DINÂMICAS + EDITOR
+         ====================================================================== -->
+    <section id="scoreSection" class="score-section" aria-label="Partitura">
+      <div class="score-toolbar">
+        <div class="tool-cluster" id="rhythmCluster" role="group" aria-label="Figura rítmica">
+          <span class="tool-cluster-title">Figura:</span>
+          <button class="tool-btn" type="button" data-dur="4" title="Semibreve (4 tempos)"><span class="mg">𝅝</span> 4t</button>
+          <button class="tool-btn" type="button" data-dur="2" title="Mínima (2 tempos)"><span class="mg">𝅗𝅥</span> 2t</button>
+          <button class="tool-btn active" type="button" data-dur="1" title="Semínima (1 tempo)"><span class="mg">𝅘𝅥</span> 1t</button>
+          <button class="tool-btn" type="button" data-dur="0.5" title="Colcheia (½ tempo)"><span class="mg">𝅘𝅥𝅮</span> ½t</button>
+          <button class="tool-btn" type="button" id="btnRestToggle" aria-pressed="false" title="Inserir pausa em vez de nota"><span class="mg">𝄽</span> Pausa</button>
+        </div>
+
+        <div class="tool-cluster" id="accidentalCluster" role="group" aria-label="Alteração">
+          <span class="tool-cluster-title">Alteração:</span>
+          <button class="tool-btn active" type="button" data-acc="">♮ Nat</button>
+          <button class="tool-btn" type="button" data-acc="#">♯ Sust.</button>
+          <button class="tool-btn" type="button" data-acc="b">♭ Bemol</button>
+          <button class="tool-btn" type="button" id="btnTieToggle" aria-pressed="false" title="Ligadura de prolongamento com a próxima nota igual">⌒ Ligadura</button>
+        </div>
+
+        <div class="tool-cluster" id="pedalTechCluster" role="group" aria-label="Técnica de pé">
+          <span class="tool-cluster-title">Pé/Técnica:</span>
+          <button class="tool-btn active" type="button" data-ptech="E^" title="Pé esquerdo — ponta">E ^ (Esq. Ponta)</button>
+          <button class="tool-btn" type="button" data-ptech="Eo" title="Pé esquerdo — calcanhar">E o (Esq. Calc.)</button>
+          <button class="tool-btn" type="button" data-ptech="D^" title="Pé direito — ponta">D ^ (Dir. Ponta)</button>
+          <button class="tool-btn" type="button" data-ptech="Do" title="Pé direito — calcanhar">D o (Dir. Calc.)</button>
+        </div>
+
+        <div class="tool-cluster" id="dynamicCluster" role="group" aria-label="Dinâmica (clique na faixa inferior da partitura)">
+          <span class="tool-cluster-title">Dinâmica:</span>
+          <button class="tool-btn" type="button" data-dyn="pp" data-dval="0.20">pp</button>
+          <button class="tool-btn" type="button" data-dyn="p" data-dval="0.35">p</button>
+          <button class="tool-btn" type="button" data-dyn="mp" data-dval="0.50">mp</button>
+          <button class="tool-btn active" type="button" data-dyn="mf" data-dval="0.65">mf</button>
+          <button class="tool-btn" type="button" data-dyn="f" data-dval="0.85">f</button>
+          <button class="tool-btn" type="button" data-dyn="ff" data-dval="1.00">ff</button>
+          <button class="tool-btn" type="button" data-dyn="cresc." data-dval="0.80" title="Crescendo até a próxima marca">cresc.</button>
+          <button class="tool-btn" type="button" data-dyn="dim." data-dval="0.30" title="Diminuendo até a próxima marca">dim.</button>
+        </div>
+
+        <div class="tool-cluster" role="group" aria-label="Edição">
+          <button class="tool-btn eraser" type="button" id="btnEraserToggle" aria-pressed="false" title="Clique em uma nota ou dinâmica para apagar">⌫ Apagar</button>
+          <button class="tool-btn" type="button" id="btnAddMeasure" title="Adicionar 1 compasso ao final">+ Compasso</button>
+          <button class="tool-btn" type="button" id="btnRemoveMeasure" title="Remover o último compasso">− Compasso</button>
+          <button class="tool-btn btn-danger" type="button" id="btnClearScore" title="Limpar todas as notas">Limpar</button>
+          <button class="tool-btn" type="button" id="btnUndo" title="Desfazer (Ctrl+Z)" disabled>↶</button>
+          <button class="tool-btn" type="button" id="btnRedo" title="Refazer (Ctrl+Shift+Z / Ctrl+Y)" disabled>↷</button>
+        </div>
+      </div>
+
+      <div class="score-legend-bar">
+        <div class="legend-items">
+          <span><i class="legend-dot dot-rh"></i>Mão Direita (Manual II)</span>
+          <span><i class="legend-dot dot-lh"></i>Mão Esquerda (Manual I)</span>
+          <span><i class="legend-dot dot-ped"></i>Pedaleira (E=Esq, D=Dir, ^=Ponta, o=Calcanhar)</span>
+          <span><i class="legend-dot dot-dyn"></i>Dinâmicas (faixa inferior — controlam a caixa expressiva)</span>
+        </div>
+        <div id="hoverPitchReadout" class="legend-readout" role="status">Clique no pentagrama para inserir notas — a voz é definida pelo pentagrama clicado</div>
+      </div>
+
+      <div id="scoreScrollContainer" class="score-scroll-container">
+        <svg id="scoreSvg" height="386" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Partitura em três pentagramas: mão direita, mão esquerda e pedaleira"></svg>
+      </div>
+
+      <div id="lyricsPanel" class="lyrics-panel" hidden>
+        <div id="lyricsComposer" class="lyrics-composer"></div>
+        <div id="lyricsBody" class="lyrics-body"></div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         CONSOLE DO ÓRGÃO
+         ====================================================================== -->
+    <section class="organ-console" aria-label="Console do órgão">
+      <div class="stops-rail">
+        <div class="stops-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4" />
+          </svg>
+          <span>Registros (Tubos)</span>
+        </div>
+        <div id="stopsGrid" class="stops-grid"></div>
+        <div class="field-row">
+          <label for="masterVolume" class="label-brass">Volume</label>
+          <input id="masterVolume" class="metro-slider stops-volume" type="range" min="0" max="100" value="90" />
+        </div>
+      </div>
+
+      <div class="manuals-stack">
+        <div class="manual-unit manual-rh">
+          <div class="manual-header rh">
+            <span id="manualUpperTitle">MANUAL II — TECLADO SUPERIOR (Mão Direita • C3 a C6)</span>
+            <span id="manualUpperHint" class="manual-hint">Atalhos PC: A S D F G H J K (pretas: W E T Y U)</span>
+          </div>
+          <div class="keyboard-scroll"><div id="manualUpper" class="keyboard-bed"></div></div>
+        </div>
+
+        <div class="manual-unit manual-lh">
+          <div class="manual-header lh">
+            <span id="manualLowerTitle">MANUAL I — TECLADO INFERIOR (Mão Esquerda • C2 a C5)</span>
+            <span id="manualLowerHint" class="manual-hint">Atalhos PC: Z X C V B N M</span>
+          </div>
+          <div class="keyboard-scroll"><div id="manualLower" class="keyboard-bed"></div></div>
+        </div>
+      </div>
+
+      <div class="floor-console">
+        <div class="pedalboard-section">
+          <div class="pedalboard-header">
+            <span id="pedalTitle">PEDALEIRA CROMÁTICA (C2 a G3 — Pés Esquerdo &amp; Direito)</span>
+            <span id="pedalHint" class="manual-hint">Atalhos PC: 1 2 3 4 5 6 7 8</span>
+          </div>
+          <div class="pedalboard-frame"><div id="pedalboardBed" class="pedalboard-inner"></div></div>
+        </div>
+
+        <div class="expression-section">
+          <div class="exp-header">
+            <span>Pedal Expressão</span>
+            <span class="manual-hint">Arraste ↕</span>
+          </div>
+          <div class="exp-body">
+            <div id="swellWell" class="swell-well" tabindex="0" role="slider" aria-label="Pedal de expressão (caixa expressiva)" aria-orientation="vertical" aria-valuemin="10" aria-valuemax="100" aria-valuenow="65" title="Arraste verticalmente para abrir ou fechar a caixa expressiva">
+              <div id="swellShoe" class="swell-shoe">
+                <div class="swell-rib"></div><div class="swell-rib"></div><div class="swell-rib"></div>
+                <div class="swell-rib"></div><div class="swell-rib"></div>
+              </div>
+            </div>
+            <div class="exp-meter-col">
+              <div id="expDynBadge" class="exp-dyn-badge">mf</div>
+              <div class="exp-bar-track"><div id="expBarFill" class="exp-bar-fill"></div></div>
+              <div id="expPctText" class="exp-pct-text">Caixa: 65%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    Organum Studio — software livre (MIT). Obras de J.S. Bach em domínio público (adaptações didáticas).
+    Fonte musical Noto Music (SIL OFL 1.1).
+  </footer>
+
+  <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
+
+  <!-- Modal de arquivo: JSON / MIDI -->
+  <div id="jsonModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="jsonModalTitle">
+    <div class="modal-card">
+      <h3 id="jsonModalTitle">Arquivo — salvar, abrir e exportar</h3>
+      <p class="modal-note">
+        Copie ou baixe o JSON para guardar sua composição, ou cole/abra um JSON para carregá-la.
+        Exporte em MIDI para abrir no MuseScore, em um DAW ou em outro sintetizador.
+      </p>
+      <textarea id="jsonTextarea" class="modal-textarea" spellcheck="false" aria-label="Partitura em JSON"></textarea>
+      <div class="modal-actions">
+        <button id="btnCopyJson" class="btn" type="button">Copiar JSON</button>
+        <button id="btnDownloadJson" class="btn" type="button">Baixar .json</button>
+        <button id="btnDownloadMidi" class="btn" type="button">Exportar .mid</button>
+        <button id="btnOpenFile" class="btn" type="button">Abrir arquivo…</button>
+        <button id="btnImportJson" class="btn btn-primary" type="button">Carregar JSON</button>
+        <button id="btnCloseModal" class="btn" type="button">Fechar</button>
+      </div>
+      <input id="fileInput" type="file" accept=".json,application/json" hidden />
+    </div>
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/score.js"></script>
+  <script src="js/presets.js"></script>
+  <script src="js/synth.js"></script>
+  <script src="js/metronome.js"></script>
+  <script src="js/scheduler.js"></script>
+  <script src="js/midi-export.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/console-ui.js"></script>
+  <script src="js/score-view.js"></script>
+  <script src="js/tutor.js"></script>
+  <script src="js/metronome-ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
